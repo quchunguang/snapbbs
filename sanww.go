@@ -404,6 +404,7 @@ func ProcessF(fids []int) {
 
 func downloadFullPage(in_url, out_url string) (err error) {
 	// wget <in_url> -p -O <out_url>
+	log.Printf("%-10s%s\n", "[Download]", out_url)
 	cmd := "wget"
 	args := []string{in_url, "-p", "-O", "out_url"}
 	err = exec.Command(cmd, args...).Run()
