@@ -19,7 +19,7 @@ import (
 )
 
 // 要抓取的板块ID (fid)
-var fids = []int{166}
+var fids = []int{165, 166, 169, 167, 168, 170}
 
 const (
 	BASE_URL   = "http://bbs.sanww.com"
@@ -132,12 +132,12 @@ func GetF(id int) (f *F, err error) {
 	// Get first page
 	GetFPage(doc, f)
 
-	// for page := 2; page <= f.Page; page++ {
-	// 	url = fmt.Sprintf(URL_F_PAGE, id, page)
-	// 	log.Printf("%-10s%s\n", "[Access]", url)
-	// 	doc, err = goquery.NewDocument(url)
-	// 	GetFPage(doc, f)
-	// }
+	for page := 2; page <= f.Page; page++ {
+		url = fmt.Sprintf(URL_F_PAGE, id, page)
+		log.Printf("%-10s%s\n", "[Access]", url)
+		doc, err = goquery.NewDocument(url)
+		GetFPage(doc, f)
+	}
 	return
 }
 
@@ -258,7 +258,7 @@ func WriteTHtml2(t *T) {
 <script>
 
 for (var i = 1; i <= {{.Page}}; i++) {
-    var url = "{{.Id}}_" + i.toString()+ ".html";
+    var url = "../bbs.sanww.com/read.php%3Ftid-{{.Id}}-page-" + i.toString()+ ".html";
     var li = '<li><p><a href="'+url+'">第'+i.toString()+'页</a></p></li>';
     $("#pages ul.list").append(li);
 }
@@ -406,7 +406,7 @@ func downloadFullPage(in_url, out_url string) (err error) {
 	// wget <in_url> -p -O <out_url>
 	log.Printf("%-10s%s\n", "[Download]", out_url)
 	cmd := "wget"
-	args := []string{in_url, "-p", "-O", "out_url"}
+	args := []string{"-E", "-k", "-K", "-p", in_url}
 	err = exec.Command(cmd, args...).Run()
 	return
 }
@@ -445,17 +445,12 @@ func ProcessT(fids []int) {
 			// Get HTML full page with `wget` if not exist yet
 			var in_url, out_url string
 			for page := 1; page <= t.Page; page++ {
-				if page == 1 {
-					in_url = fmt.Sprintf(URL_T, post.Id)
-				} else {
-					in_url = fmt.Sprintf(URL_T_PAGE, post.Id, page)
-				}
+				in_url = fmt.Sprintf(URL_T_PAGE, post.Id, page)
 				out_url = "posts/" + strconv.Itoa(post.Id) + "_" + strconv.Itoa(page) + ".html"
-				fmt.Println(in_url, out_url)
 
 				// if out_url not exist, download
 				if _, err := os.Stat(out_url); err != nil {
-					// downloadFullPage(in_url, out_url)
+					downloadFullPage(in_url, out_url)
 				}
 
 			}
